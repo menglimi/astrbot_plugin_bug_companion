@@ -181,8 +181,6 @@
     const fields = $(".repository-summary-fields");
     fields.classList.toggle("is-disabled", !enabled);
     fields.setAttribute("aria-disabled", String(!enabled));
-    $("#settingRepositoryAiSummaryProvider").disabled = !enabled;
-    $("#settingRepositoryAiSummaryMaxChars").disabled = !enabled;
   }
 
   async function ensureManagedPlugins() {
