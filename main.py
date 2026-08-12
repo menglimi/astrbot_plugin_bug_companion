@@ -21,7 +21,7 @@ PLUGIN_VERSION = "0.3.5"
 @register(
     "BugCompanion",
     "menglimi",
-    "以生活模拟为基础的全方位 AI 能力强化陪伴插件，提供问题收集、人工批阅、仓库动态播报与知识答疑。",
+    "开发者群问题收集、人工审批、待办追踪、仓库动态播报与已审批知识答疑插件。",
     PLUGIN_VERSION,
     "https://github.com/menglimi/astrbot_plugin_bug_companion",
 )
