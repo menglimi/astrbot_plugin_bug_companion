@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>修 Bug 奏事台</title>
+  <link rel="icon" href="../../logo.png" />
+  <link rel="stylesheet" href="./app.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <span class="brand-mark" aria-hidden="true"><img src="../../logo.png" alt="" /></span>
+        <div>
+          <p class="eyebrow">内阁票拟 · 开发者问题中枢</p>
+          <h1>修 Bug 奏事台</h1>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="connectionState" class="connection-state"><i data-lucide="loader-circle"></i>连接中</span>
+        <button id="refreshButton" class="icon-button" type="button" title="刷新数据" aria-label="刷新数据"><i data-lucide="refresh-cw"></i></button>
+        <button id="themeButton" class="icon-button" type="button" title="切换主题" aria-label="切换主题"><i data-lucide="sun-moon"></i></button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar" aria-label="工作台导航">
+        <div class="nav-label">奏事诸司</div>
+        <nav class="primary-nav" id="primaryNav">
+          <button class="nav-item active" type="button" data-view="overview" aria-current="page"><i data-lucide="scroll-text"></i><span>御案</span><b id="reviewCount">0</b></button>
+          <button class="nav-item" type="button" data-view="todos"><i data-lucide="list-checks"></i><span>待办册</span><b id="todoCount">0</b></button>
+          <button class="nav-item" type="button" data-view="issues"><i data-lucide="library"></i><span>案牍库</span><b>03</b></button>
+          <button class="nav-item" type="button" data-view="inbox"><i data-lucide="inbox"></i><span>收奏箱</span><b id="inboxCount">0</b></button>
+          <button class="nav-item" type="button" data-view="answers"><i data-lucide="message-square-text"></i><span>答疑录</span><b>05</b></button>
+          <button class="nav-item" type="button" data-view="groups"><i data-lucide="messages-square"></i><span>群辖</span><b>06</b></button>
+          <button class="nav-item" type="button" data-view="settings"><i data-lucide="sliders-horizontal"></i><span>设置</span><b>07</b></button>
+        </nav>
+        <div class="sidebar-foot">
+          <span class="status-dot"></span>
+          <span>案牍存于本地</span>
+          <button id="exportButton" class="text-button" type="button">导出 JSON</button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section class="view active" data-view-panel="overview" aria-labelledby="overviewTitle">
+          <div class="view-heading">
+            <div><p class="eyebrow">御览 / <span id="overviewDate"></span></p><h2 id="overviewTitle">今日御案</h2></div>
+            <button class="primary-button" type="button" data-action="new-issue"><i data-lucide="file-plus-2"></i>亲拟一折</button>
+          </div>
+          <div class="metric-grid" id="metricGrid"></div>
+          <div class="review-desk">
+            <aside class="panel review-queue-panel" aria-labelledby="reviewQueueTitle">
+              <div class="panel-heading review-queue-heading">
+                <div><span class="panel-kicker">Review Queue</span><h3 id="reviewQueueTitle">待审批问题</h3></div>
+                <span class="panel-meta" id="reviewQueueMeta">载入中</span>
+              </div>
+              <div class="review-queue" id="reviewQueue"></div>
+            </aside>
+            <section class="memorial-stage" aria-live="polite">
+              <div class="memorial-toolbar">
+                <span id="reviewProgress">尚未启卷</span>
+                <div class="memorial-nav">
+                  <button id="previousReview" class="icon-button" type="button" title="上一折" aria-label="上一折"><i data-lucide="chevron-left"></i></button>
+                  <button id="nextReview" class="icon-button" type="button" title="下一折" aria-label="下一折"><i data-lucide="chevron-right"></i></button>
+                </div>
+              </div>
+              <article class="memorial-paper" id="reviewPaper">
+                <div class="memorial-empty"><i data-lucide="loader-circle"></i><strong>正在启卷</strong></div>
+              </article>
+              <div class="review-actions" id="reviewActions" hidden>
+                <button class="review-button todo" type="button" data-review-decision="todo" title="保留问题并创建后续待办"><i data-lucide="list-plus"></i><span>设为待办</span></button>
+                <button class="review-button reject" type="button" data-review-decision="reject" title="认定为无用记录，不进入答疑知识"><i data-lucide="ban"></i><span>驳回无用</span></button>
+                <button class="review-button approve" type="button" data-review-decision="approve" title="认可问题描述和解决办法并归档"><i data-lucide="badge-check"></i><span>认可问题与方案</span></button>
+                <button class="review-button edit" type="button" data-edit-solution="" title="修改当前问题的解决办法"><i data-lucide="pencil-line"></i><span>修改解决办法</span></button>
+              </div>
+            </section>
+          </div>
+          <div class="overview-grid">
+            <section class="panel chart-panel">
+              <div class="panel-heading"><div><span class="panel-kicker">Issue Flow</span><h3>流转态势</h3></div><span class="panel-meta" id="issueMixMeta">—</span></div>
+              <div class="status-bars" id="statusBars"></div>
+            </section>
+            <section class="panel recent-panel">
+              <div class="panel-heading"><div><span class="panel-kicker">Recently Filed</span><h3>近呈案牍</h3></div><button class="text-button" type="button" data-view-link="issues">查阅全库</button></div>
+              <div class="compact-list" id="recentList"></div>
+            </section>
+          </div>
+          <section class="panel signal-panel">
+            <div class="panel-heading"><div><span class="panel-kicker">Archive Distribution</span><h3>案牍分布</h3></div><span class="panel-meta">实时</span></div>
+            <div class="signal-groups">
+              <section class="signal-group" aria-labelledby="domainSignalTitle">
+                <div class="signal-group-heading"><strong id="domainSignalTitle">问题归属</strong><span>责任边界</span></div>
+                <div class="signal-grid domain-signal-grid" id="domainSignalGrid"></div>
+              </section>
+              <section class="signal-group" aria-labelledby="pluginSignalTitle">
+                <div class="signal-group-heading"><strong id="pluginSignalTitle">插件问题分布</strong><span>按管理的插件统计</span></div>
+                <div class="signal-grid plugin-signal-grid" id="pluginSignalGrid"></div>
+              </section>
+              <section class="signal-group" aria-labelledby="categorySignalTitle">
+                <div class="signal-group-heading"><strong id="categorySignalTitle">知识分类</strong><span>处理语义</span></div>
+                <div class="signal-grid" id="signalGrid"></div>
+              </section>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" data-view-panel="todos" aria-labelledby="todosTitle" hidden>
+          <div class="view-heading">
+            <div><p class="eyebrow">交办 / 有据可循</p><h2 id="todosTitle">待办册</h2></div>
+            <div class="heading-actions">
+              <label class="compact-filter"><span>范围</span><select id="todoFilter"><option value="open">未办</option><option value="completed">已办</option><option value="all">全部</option></select></label>
+              <button id="newTodoButton" class="primary-button" type="button"><i data-lucide="list-plus"></i>添一项</button>
+            </div>
+          </div>
+          <section class="todo-ledger" aria-live="polite">
+            <div class="todo-ledger-head"><span id="todoMeta">载入中</span><span>勾销后仍留存记录</span></div>
+            <div class="todo-list" id="todoList"></div>
+            <div class="pager todo-pager" id="todoPager"></div>
+          </section>
+        </section>
+
+        <section class="view" data-view-panel="issues" aria-labelledby="issuesTitle" hidden>
+          <div class="view-heading"><div><p class="eyebrow">入典知识 / 可检索、可追溯</p><h2 id="issuesTitle">案牍库</h2></div><button class="primary-button" type="button" data-action="new-issue"><i data-lucide="file-plus-2"></i>亲拟一折</button></div>
+          <div class="toolbar panel" role="search" aria-label="案牍筛选">
+            <label class="search-field"><span>检索案牍</span><span class="search-input"><i data-lucide="search"></i><input id="issueSearch" type="search" placeholder="标题、现象、原因、版本…" autocomplete="off" /></span></label>
+            <label class="filter-control domain-control"><span>问题归属</span><select id="domainFilter"><option value="">全部归属</option><option value="plugin">插件问题</option><option value="astrbot">AstrBot 问题</option><option value="model">模型问题</option><option value="other">其他问题</option></select></label>
+            <label class="filter-control plugin-control"><span>具体插件</span><select id="pluginFilter" disabled><option value="">全部插件</option></select></label>
+            <label class="filter-control"><span>审批</span><select id="reviewFilter"><option value="">全部状态</option><option value="pending">待审批</option><option value="published">已入知识库</option><option value="approved">已认可</option><option value="todo">待办跟踪</option><option value="deferred">待修改</option><option value="rejected">已驳回</option></select></label>
+            <label class="filter-control"><span>处理状态</span><select id="statusFilter"><option value="">全部状态</option><option value="pending,triaged,in_progress">开放中</option><option value="resolved">已解决</option><option value="wont_fix">暂不处理</option><option value="duplicate">重复问题</option><option value="archived">已封存</option></select></label>
+            <label class="filter-control category-control"><span>知识分类</span><select id="categoryFilter"><option value="">全部分类</option><option value="known_bug">当前已知 Bug</option><option value="fixed_bug">历史已修复 Bug</option><option value="faq">常见问题</option><option value="compatibility">环境 / 第三方兼容</option><option value="optimization">优化建议</option><option value="pending_feedback">待确认反馈</option></select></label>
+            <label class="filter-control"><span>验证状态</span><select id="verificationFilter"><option value="">全部验证状态</option><option value="unverified">未验证</option><option value="confirmed">已确认</option><option value="fix_pending">修复待验证</option><option value="verified">已验证</option><option value="not_reproducible">暂未复现</option></select></label>
+            <label class="filter-control"><span>排序方式</span><select id="sortFilter"><option value="updated_desc">最近更新</option><option value="severity_desc">优先级</option><option value="occurrence_desc">出现次数</option><option value="created_desc">最新创建</option></select></label>
+            <button id="clearIssueFilters" class="quiet-button filter-reset" type="button" disabled><i data-lucide="list-restart"></i><span>重置</span></button>
+          </div>
+          <div class="issue-layout">
+            <section class="panel issue-table-panel"><div class="table-head"><div class="result-meta"><span id="issueResultMeta">加载中</span><span id="activeFilterMeta" class="active-filter-meta" hidden></span></div><div class="bulk-actions" id="bulkActions" hidden><span id="bulkSelectionMeta">已选择 0 条</span><button class="quiet-button" type="button" data-bulk-status="resolved"><i data-lucide="circle-check"></i>标记解决</button><button class="quiet-button danger" type="button" data-bulk-status="archived"><i data-lucide="archive"></i>封存</button></div></div><div class="issue-table" id="issueTable"></div><div class="pager" id="issuePager"></div></section>
+            <aside class="panel issue-detail-panel" id="issueDetailPanel"><div class="empty-state"><i data-lucide="mouse-pointer-2"></i><strong>选择一份案牍</strong><span>查看证据、批阅与流转记录</span></div></aside>
+          </div>
+        </section>
+
+        <section class="view" data-view-panel="inbox" aria-labelledby="inboxTitle" hidden>
+          <div class="view-heading"><div><p class="eyebrow">通政司 / 原始群聊证据</p><h2 id="inboxTitle">收奏箱</h2></div><button id="reprocessSelected" class="primary-button" type="button"><i data-lucide="sparkles"></i><span id="reprocessLabel">交内阁票拟</span></button></div>
+          <section class="panel inbox-panel"><div class="table-head"><div class="result-meta"><span id="inboxMeta">加载中</span><span id="inboxSelectionMeta" class="active-filter-meta" hidden></span></div><label class="check-all"><input id="inboxCheckAll" type="checkbox" />选择本页</label></div><div class="inbox-list" id="inboxList"></div></section>
+        </section>
+
+        <section class="view" data-view-panel="answers" aria-labelledby="answersTitle" hidden>
+          <div class="view-heading"><div><p class="eyebrow">问对 / 审计可查</p><h2 id="answersTitle">答疑录</h2></div><span class="view-note">仅引用人工认可的知识</span></div>
+          <section class="panel"><div class="answer-list" id="answerList"></div></section>
+        </section>
+
+        <section class="view" data-view-panel="groups" aria-labelledby="groupsTitle" hidden>
+          <div class="view-heading"><div><p class="eyebrow">Collection Scope / UMO</p><h2 id="groupsTitle">群辖</h2></div><span class="view-note">开关即时生效</span></div>
+          <section class="panel"><div class="table-head"><span>已配置或显式授权的群聊</span><button class="text-button" type="button" data-action="show-group-help">查看格式</button></div><div class="group-list" id="groupList"></div></section>
+        </section>
+
+        <section class="view" data-view-panel="settings" aria-labelledby="settingsTitle" hidden>
+          <div class="view-heading"><div><p class="eyebrow">Runtime Control / 保存即生效</p><h2 id="settingsTitle">设置</h2></div><button id="saveSettings" class="primary-button" type="button"><i data-lucide="save"></i>保存设置</button></div>
+          <form class="settings-grid" id="settingsForm">
+            <section class="panel settings-card">
+              <div class="panel-heading"><div><span class="panel-kicker">01 · Capture</span><h3>收集范围</h3></div></div>
+              <label class="toggle-row"><span><strong>启用问题收集</strong><small>只处理已配置或显式授权的开发者群</small></span><input id="settingCollectionEnabled" type="checkbox" /></label>
+              <label class="field"><span>目标群 UMO / 群号</span><textarea id="settingTargetGroups" rows="4" placeholder="每行一个，优先填写完整 UMO"></textarea></label>
+              <div class="two-fields">
+                <label class="field"><span>等待秒数</span><input id="settingQuietSeconds" type="number" min="2" max="180" required /></label>
+                <label class="field"><span>单批消息数</span><input id="settingBatchMessages" type="number" min="1" max="100" required /></label>
+              </div>
+              <label class="field"><span>单批字符数</span><input id="settingBatchChars" type="number" min="1000" max="50000" step="500" required /></label>
+              <label class="field"><span>忽略发送者 ID</span><textarea id="settingIgnoredSenders" rows="3" placeholder="每行一个 Bot 或账号 ID"></textarea></label>
+            </section>
+            <section class="panel settings-card">
+              <div class="panel-heading"><div><span class="panel-kicker">02 · Intelligence</span><h3>模型整理</h3></div></div>
+              <label class="field"><span>整理模型 ID</span><input id="settingProvider" type="text" placeholder="留空使用当前会话模型" /></label>
+              <label class="field"><span>备用模型 ID</span><input id="settingFallbackProvider" type="text" placeholder="可选" /></label>
+              <label class="field"><span>管理的插件名称<small class="field-help">每行一个，最多 50 个；仅用于“插件问题”的具体插件归类、筛选和统计。</small></span><textarea id="settingManagedPlugins" rows="4" maxlength="6200" placeholder="例如：astrbot_plugin_private_companion"></textarea></label>
+              <div class="two-fields">
+                <label class="field"><span>超时秒数</span><input id="settingTimeout" type="number" min="5" max="300" required /></label>
+                <label class="field"><span>单批候选数</span><input id="settingMaxCandidates" type="number" min="1" max="12" required /></label>
+              </div>
+              <label class="field"><span>团队整理要求</span><textarea id="settingGuidance" rows="5" maxlength="2000" placeholder="例如：记录 AstrBot 版本和 PR 编号"></textarea></label>
+            </section>
+            <section class="panel settings-card">
+              <div class="panel-heading"><div><span class="panel-kicker">03 · Support</span><h3>历史答疑</h3></div></div>
+              <label class="toggle-row"><span><strong>允许自然答疑</strong><small>仅在明确求助且找到已解决记录时回复</small></span><input id="settingAutoAnswer" type="checkbox" /></label>
+              <label class="field"><span>最低置信度 <output id="confidenceOutput">72</output></span><input id="settingConfidence" type="range" min="0" max="100" step="1" /></label>
+              <div class="two-fields">
+                <label class="field"><span>同群间隔（秒）</span><input id="settingCooldown" type="number" min="0" max="3600" required /></label>
+                <label class="field"><span>参考问题数</span><input id="settingMaxReferences" type="number" min="1" max="12" required /></label>
+              </div>
+            </section>
+            <section class="panel settings-card repository-settings-card">
+              <div class="panel-heading"><div><span class="panel-kicker">04 · Dispatch</span><h3>仓库动态</h3></div><span class="settings-card-badge">固定群</span></div>
+              <label class="toggle-row"><span><strong>启用定期推送</strong><small>首次启用只记录当前进度，不补发历史动态</small></span><input id="settingRepositoryUpdatesEnabled" type="checkbox" /></label>
+              <label class="field"><span>GitHub 仓库地址<small class="field-help">每行一个，例如 https://github.com/owner/repo，最多 50 个。</small></span><textarea id="settingRepositories" rows="4" maxlength="25050" placeholder="https://github.com/owner/repo"></textarea></label>
+              <label class="field"><span>固定推送群 UMO<small class="field-help">每行一个，最多 50 个；只会向这里配置的群聊推送，不复用问题收集群。</small></span><textarea id="settingRepositoryTargetGroups" rows="3" maxlength="15050" placeholder="aiocqhttp:GroupMessage:123456"></textarea></label>
+              <div class="repository-notify-options" role="group" aria-label="推送内容">
+                <label class="compact-toggle"><input id="settingNotifyCommits" type="checkbox" /><span><strong>新增提交</strong><small>Commit</small></span></label>
+                <label class="compact-toggle"><input id="settingNotifyReleases" type="checkbox" /><span><strong>版本发布</strong><small>Release</small></span></label>
+              </div>
+              <div class="repository-summary-settings" role="group" aria-label="AI 更新摘要设置">
+                <label class="compact-toggle repository-summary-toggle"><input id="settingRepositoryAiSummaryEnabled" type="checkbox" /><span><strong>AI 总结更新内容</strong><small>可选</small></span></label>
+                <div class="repository-summary-fields">
+                  <label class="field"><span>摘要模型 ID<small class="field-help">留空时复用“模型整理”的整理模型；模型不可用时仍发送原始更新条目。</small></span><input id="settingRepositoryAiSummaryProvider" type="text" maxlength="160" autocomplete="off" placeholder="留空复用整理模型" /></label>
+                  <label class="field"><span>摘要最大字数</span><input id="settingRepositoryAiSummaryMaxChars" type="number" min="120" max="1500" required /></label>
+                </div>
+              </div>
+              <div class="two-fields">
+                <label class="field"><span>检查间隔（分钟）</span><input id="settingRepositoryInterval" type="number" min="10" max="1440" required /></label>
+                <label class="field"><span>每仓库每类上限</span><input id="settingRepositoryMaxItems" type="number" min="1" max="20" required /></label>
+              </div>
+            </section>
+            <section class="panel settings-card">
+              <div class="panel-heading"><div><span class="panel-kicker">05 · Storage</span><h3>数据与外观</h3></div></div>
+              <label class="toggle-row"><span><strong>保留非问题上下文</strong><small>关闭后会删除模型确认无候选的原始消息</small></span><input id="settingKeepContext" type="checkbox" /></label>
+              <div class="two-fields">
+                <label class="field"><span>原始消息保留天数</span><input id="settingRawDays" type="number" min="0" max="3650" required /></label>
+                <label class="field"><span>页面主题</span><select id="settingTheme"><option value="system">跟随系统</option><option value="light">浅色</option><option value="dark">深色</option></select></label>
+              </div>
+              <div class="settings-actions">
+                <button id="maintenanceButton" class="quiet-button" type="button"><i data-lucide="eraser"></i>清理过期原始消息</button>
+                <button id="settingsExportButton" class="quiet-button" type="button"><i data-lucide="download"></i>导出 JSON</button>
+              </div>
+            </section>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="issueDialog" class="issue-dialog" aria-labelledby="dialogTitle">
+    <form method="dialog" id="issueForm" novalidate>
+      <div class="dialog-head issue-dialog-head">
+        <div><span class="panel-kicker">Memorial Editor</span><h3 id="dialogTitle">亲拟一折</h3></div>
+        <button id="issueDialogClose" class="icon-button" type="button" title="关闭" aria-label="关闭"><i data-lucide="x"></i></button>
+      </div>
+      <input id="editIssueId" type="hidden" />
+      <div class="issue-dialog-body">
+        <div class="editor-tabs" role="tablist" aria-label="案牍编辑栏目">
+          <button id="editorTabBasics" class="editor-tab active" type="button" role="tab" aria-selected="true" aria-controls="editorPanelBasics" data-editor-tab="basics"><i data-lucide="clipboard-list"></i><span>基本案情</span></button>
+          <button id="editorTabEvidence" class="editor-tab" type="button" role="tab" aria-selected="false" aria-controls="editorPanelEvidence" data-editor-tab="evidence"><i data-lucide="scan-search"></i><span>复现影响</span></button>
+          <button id="editorTabResolution" class="editor-tab" type="button" role="tab" aria-selected="false" aria-controls="editorPanelResolution" data-editor-tab="resolution"><i data-lucide="wrench"></i><span>研判处置</span></button>
+        </div>
+
+        <section id="editorPanelBasics" class="editor-tab-panel active" role="tabpanel" aria-labelledby="editorTabBasics" data-editor-panel="basics">
+          <div class="editor-panel-heading"><div><span class="panel-kicker">01 · Docket</span><h4>基本案情</h4></div><span>归属与流转</span></div>
+          <div class="form-grid">
+            <label class="field wide"><span>标题 <b class="required-mark">必填</b></span><input id="editTitle" maxlength="160" autocomplete="off" /></label>
+            <label class="field wide"><span>归属群聊</span><select id="editGroup"><option value="">不绑定群聊</option></select></label>
+            <label class="field"><span>问题归属</span><select id="editIssueDomain"><option value="plugin">插件问题</option><option value="astrbot">AstrBot 问题</option><option value="model">模型问题</option><option value="other" selected>其他问题</option></select></label>
+            <label class="field plugin-picker is-disabled" id="editPluginField"><span>所属插件<small class="field-help" id="editPluginHint">仅插件问题可指定具体插件</small></span><select id="editPluginName" disabled><option value="">未指定插件</option></select></label>
+            <label class="field"><span>知识分类</span><select id="editCategory"><option value="pending_feedback">待确认反馈</option><option value="known_bug">当前已知 Bug</option><option value="fixed_bug">历史已修复 Bug</option><option value="faq">常见问题</option><option value="compatibility">环境 / 第三方兼容</option><option value="optimization">优化建议</option></select></label>
+            <label class="field"><span>验证状态</span><select id="editVerification"><option value="unverified">未验证</option><option value="confirmed">已确认</option><option value="fix_pending">修复待验证</option><option value="verified">已验证</option><option value="not_reproducible">暂未复现</option></select></label>
+            <label class="field"><span>粗类型</span><select id="editKind"><option value="bug">Bug</option><option value="question">问题</option><option value="optimization">优化</option></select></label>
+            <label class="field"><span>处理状态</span><select id="editStatus"><option value="pending">待整理</option><option value="triaged">已分诊</option><option value="in_progress">处理中</option><option value="resolved">已解决</option><option value="wont_fix">暂不处理</option><option value="duplicate" disabled>重复问题（请使用合并）</option><option value="archived">已封存</option></select></label>
+            <label class="field"><span>优先级</span><select id="editSeverity"><option value="low">低</option><option value="medium">中</option><option value="high">高</option><option value="critical">紧急</option></select></label>
+            <label class="field"><span>最后确认时间</span><input id="editLastConfirmedAt" type="datetime-local" /></label>
+            <label class="field wide"><span>摘要</span><textarea id="editSummary" rows="3" maxlength="2000"></textarea></label>
+          </div>
+        </section>
+
+        <section id="editorPanelEvidence" class="editor-tab-panel" role="tabpanel" aria-labelledby="editorTabEvidence" data-editor-panel="evidence" hidden>
+          <div class="editor-panel-heading"><div><span class="panel-kicker">02 · Evidence</span><h4>复现影响</h4></div><span>事实与边界</span></div>
+          <div class="form-grid">
+            <label class="field"><span>现象</span><textarea id="editSymptoms" rows="5" maxlength="4000"></textarea></label>
+            <label class="field"><span>复现条件</span><textarea id="editReproduction" rows="5" maxlength="4000"></textarea></label>
+            <label class="field"><span>期望行为</span><textarea id="editExpected" rows="4" maxlength="2000"></textarea></label>
+            <label class="field"><span>实际行为</span><textarea id="editActual" rows="4" maxlength="2000"></textarea></label>
+            <label class="field"><span>实际环境</span><textarea id="editEnvironment" rows="4" maxlength="2000"></textarea></label>
+            <label class="field"><span>影响</span><textarea id="editImpact" rows="4" maxlength="2000"></textarea></label>
+          </div>
+        </section>
+
+        <section id="editorPanelResolution" class="editor-tab-panel" role="tabpanel" aria-labelledby="editorTabResolution" data-editor-panel="resolution" hidden>
+          <div class="editor-panel-heading"><div><span class="panel-kicker">03 · Resolution</span><h4>研判处置</h4></div><span>版本与方案</span></div>
+          <div class="form-grid">
+            <label class="field"><span>出现版本</span><input id="editIntroducedVersion" maxlength="120" placeholder="例如 5.10.4" /></label>
+            <label class="field"><span>修复版本</span><input id="editFixedVersion" maxlength="120" placeholder="未知时留空" /></label>
+            <label class="field wide"><span>适用范围</span><textarea id="editApplicableScope" rows="3" maxlength="2000" placeholder="已确认的平台、版本或环境范围"></textarea></label>
+            <label class="field"><span>原因</span><textarea id="editCause" rows="5" maxlength="4000"></textarea></label>
+            <label class="field"><span>解决方案</span><textarea id="editSolution" rows="5" maxlength="6000"></textarea></label>
+            <label class="field wide"><span>临时方案</span><textarea id="editWorkaround" rows="3" maxlength="4000"></textarea></label>
+            <label class="field wide"><span>标签（逗号分隔）</span><input id="editTags" maxlength="1619" /></label>
+          </div>
+        </section>
+      </div>
+      <div class="dialog-actions issue-dialog-actions"><button id="issueDialogCancel" class="quiet-button" type="button">取消</button><button class="primary-button" id="saveIssue" value="default" type="submit"><i data-lucide="check"></i>保存案牍</button></div>
+    </form>
+  </dialog>
+  <dialog id="reviewDialog" class="action-dialog review-dialog" aria-labelledby="reviewDialogTitle">
+    <form method="dialog" id="reviewForm">
+      <div class="dialog-head">
+        <div><span class="panel-kicker">Vermilion Rescript</span><h3 id="reviewDialogTitle">批阅奏折</h3></div>
+        <button id="reviewDialogClose" class="icon-button" type="button" aria-label="关闭"><i data-lucide="x"></i></button>
+      </div>
+      <input id="reviewIssueId" type="hidden" />
+      <input id="reviewDecision" type="hidden" />
+      <p id="reviewDialogMessage" class="action-dialog-message"></p>
+      <label id="reviewPresetField" class="field" hidden>
+        <span>处置方案预设</span>
+        <select id="reviewPreset">
+          <option value="">不使用预设，手动填写</option>
+          <option value="later_version">后续版本优化</option>
+          <option value="upstream_fix">等待上游修复</option>
+          <option value="docs_update">补充文档说明</option>
+          <option value="collect_evidence">补充证据后再定</option>
+        </select>
+        <small class="field-help">预设只会填入待办预案，可继续修改；不会直接进入知识库。</small>
+      </label>
+      <label class="field"><span>审批备注</span><textarea id="reviewNote" rows="3" maxlength="2000" placeholder="可留空"></textarea></label>
+      <label id="reviewTodoField" class="field" hidden><span>交办事项</span><textarea id="reviewTodo" rows="4" maxlength="2000" placeholder="写明下一步与验收标准"></textarea></label>
+      <label id="reviewDueField" class="field" hidden><span>限期</span><input id="reviewDue" type="datetime-local" /></label>
+      <div class="dialog-actions"><button id="reviewCancel" class="quiet-button" type="button">取消</button><button id="reviewConfirm" class="primary-button" value="confirm" type="submit"><i data-lucide="stamp"></i>确认</button></div>
+    </form>
+  </dialog>
+  <dialog id="todoDialog" class="action-dialog" aria-labelledby="todoDialogTitle">
+    <form method="dialog" id="todoForm">
+      <div class="dialog-head">
+        <div><span class="panel-kicker">New Assignment</span><h3 id="todoDialogTitle">添一项待办</h3></div>
+        <button id="todoDialogClose" class="icon-button" type="button" aria-label="关闭"><i data-lucide="x"></i></button>
+      </div>
+      <label class="field"><span>关联案号</span><input id="todoIssueId" maxlength="80" placeholder="BUG-YYYYMMDD-001" required /></label>
+      <label class="field"><span>交办事项</span><textarea id="todoContent" rows="4" maxlength="2000" required></textarea></label>
+      <label class="field"><span>限期</span><input id="todoDue" type="datetime-local" /></label>
+      <div class="dialog-actions"><button id="todoCancel" class="quiet-button" type="button">取消</button><button id="todoConfirm" class="primary-button" value="confirm" type="submit"><i data-lucide="list-plus"></i>列入待办</button></div>
+    </form>
+  </dialog>
+  <dialog id="actionDialog" class="action-dialog" aria-labelledby="actionDialogTitle" aria-describedby="actionDialogMessage">
+    <form method="dialog" id="actionForm">
+      <div class="dialog-head">
+        <div><span class="panel-kicker">Confirm Action</span><h3 id="actionDialogTitle">确认操作</h3></div>
+        <button id="actionDialogClose" class="icon-button" type="button" aria-label="关闭"><i data-lucide="x"></i></button>
+      </div>
+      <p id="actionDialogMessage" class="action-dialog-message"></p>
+      <label id="actionInputField" class="field" hidden><span id="actionInputLabel">目标问题 ID</span><input id="actionInput" maxlength="80" autocomplete="off" /></label>
+      <div class="dialog-actions"><button id="actionCancel" class="quiet-button" type="button">取消</button><button id="actionConfirm" class="primary-button" value="confirm" type="submit">确认</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="./lucide.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

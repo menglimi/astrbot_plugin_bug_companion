@@ -1,0 +1,227 @@
+{
+  "collection": {
+    "description": "群聊收集",
+    "hint": "只在指定开发者交流群中观察消息。建议填写 /sid 返回的完整会话 ID。",
+    "type": "object",
+    "items": {
+      "enabled": {
+        "description": "启用问题收集",
+        "type": "bool",
+        "default": true
+      },
+      "target_groups": {
+        "description": "开发者交流群",
+        "hint": "填写完整 UMO（如 aiocqhttp:GroupMessage:123456）或群号。也可在插件拓展页中启用已发现群聊。",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        }
+      },
+      "quiet_seconds": {
+        "description": "整理等待秒数",
+        "hint": "群聊暂时安静后再把连续上下文交给模型，避免把同一问题拆成多条。",
+        "type": "int",
+        "default": 12
+      },
+      "batch_max_messages": {
+        "description": "单批最大消息数",
+        "type": "int",
+        "default": 40
+      },
+      "batch_max_chars": {
+        "description": "单批最大字符数",
+        "type": "int",
+        "default": 10000
+      },
+      "ignored_sender_ids": {
+        "description": "忽略发送者 ID",
+        "hint": "可填写机器人账号或不参与问题整理的账号 ID。插件也会自动识别当前 Bot 自己发送的消息。",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "models": {
+    "description": "模型整理",
+    "hint": "模型只负责预标记、校对真实问题、判断解决状态和提出处理建议，不会代替用户认可或发布知识，也不会自动合并或删除问题。显式选择任一整理模型后，不会再把群聊证据回退给当前会话模型。",
+    "type": "object",
+    "items": {
+      "managed_plugins": {
+        "description": "管理的插件名称",
+        "hint": "用于把插件问题精确归档到具体插件。每行一个名称；整理模型只能从这里选择，不会根据关键词猜测。",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        }
+      },
+      "organizer_provider_id": {
+        "description": "整理模型",
+        "_special": "select_provider",
+        "hint": "整理模型和备用整理模型都留空时，才使用当前群聊模型。",
+        "type": "string",
+        "default": ""
+      },
+      "fallback_provider_id": {
+        "description": "备用整理模型",
+        "_special": "select_provider",
+        "type": "string",
+        "default": ""
+      },
+      "timeout_seconds": {
+        "description": "模型超时秒数",
+        "type": "int",
+        "default": 60
+      },
+      "max_candidates_per_batch": {
+        "description": "单批最多候选",
+        "type": "int",
+        "default": 6
+      },
+      "custom_organizer_guidance": {
+        "description": "额外整理要求",
+        "hint": "会追加到内置提示词中，适合声明项目名、版本格式或团队约定。",
+        "type": "text",
+        "default": ""
+      }
+    }
+  },
+  "answers": {
+    "description": "历史答疑",
+    "hint": "答疑以已确认的解决方案为主；证据不足时会明确说明，不会把猜测说成结论。",
+    "type": "object",
+    "items": {
+      "auto_answer": {
+        "description": "允许自然答疑",
+        "hint": "仅当模型判断群友正在明确求助，且找到足够相似的已解决问题时才回复。命令答疑不受此开关影响。",
+        "type": "bool",
+        "default": true
+      },
+      "answer_min_confidence": {
+        "description": "最低答疑置信度",
+        "hint": "0-100。低于该值只记录候选，不在群内主动答复。",
+        "type": "int",
+        "default": 72
+      },
+      "group_cooldown_seconds": {
+        "description": "同群答疑间隔秒数",
+        "type": "int",
+        "default": 120
+      },
+      "max_reference_issues": {
+        "description": "最多参考问题数",
+        "type": "int",
+        "default": 4
+      }
+    }
+  },
+  "repository_updates": {
+    "description": "仓库动态",
+    "hint": "定期读取指定 GitHub 仓库，并只向这里单独配置的固定群聊推送新增提交或版本发布。首次启用只建立当前进度基线，不补发历史动态。",
+    "type": "object",
+    "items": {
+      "enabled": {
+        "description": "启用仓库动态推送",
+        "type": "bool",
+        "default": false
+      },
+      "repositories": {
+        "description": "GitHub 仓库",
+        "hint": "每行一个仓库地址，如 https://github.com/owner/repo。最多 50 个；仓库较多或私有仓库可在 AstrBot 运行环境中设置 GITHUB_TOKEN。",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        }
+      },
+      "target_groups": {
+        "description": "固定推送群",
+        "hint": "填写完整 UMO（如 aiocqhttp:GroupMessage:123456），最多 50 个。不会自动向问题收集群或最近活跃群扩散。",
+        "type": "list",
+        "default": [],
+        "items": {
+          "type": "string"
+        }
+      },
+      "interval_minutes": {
+        "description": "检查间隔分钟数",
+        "hint": "允许 10-1440 分钟。",
+        "type": "int",
+        "default": 60
+      },
+      "notify_commits": {
+        "description": "推送新增提交",
+        "type": "bool",
+        "default": true
+      },
+      "notify_releases": {
+        "description": "推送版本发布",
+        "type": "bool",
+        "default": true
+      },
+      "ai_summary_enabled": {
+        "description": "使用 AI 总结本轮更新",
+        "hint": "使用已配置的整理模型提炼提交和 Release Notes；模型不可用时仍会发送原始更新列表。",
+        "type": "bool",
+        "default": false
+      },
+      "ai_summary_provider_id": {
+        "description": "摘要模型",
+        "hint": "留空时复用整理模型及其备用模型；单独指定时只使用该模型。",
+        "_special": "select_provider",
+        "type": "string",
+        "default": ""
+      },
+      "ai_summary_max_chars": {
+        "description": "摘要最大字数",
+        "hint": "120-1500。原始提交与版本列表仍会附在摘要后。",
+        "type": "int",
+        "default": 700
+      },
+      "max_items_per_check": {
+        "description": "每仓库每类展示上限",
+        "hint": "同一轮发现较多更新时会合并推送；每个仓库的提交和版本发布各展示 1-20 条。",
+        "type": "int",
+        "default": 5
+      }
+    }
+  },
+  "retention": {
+    "description": "数据保留",
+    "type": "object",
+    "items": {
+      "raw_message_days": {
+        "description": "原始消息保留天数",
+        "hint": "维护任务会清理超过该天数、且未被证据引用的已整理原始消息，并清理同期 QQ 历史导入归档；0 表示永久保留。问题证据摘录不会随之删除。",
+        "type": "int",
+        "default": 90
+      },
+      "store_non_candidate_context": {
+        "description": "保留非问题上下文",
+        "hint": "关闭后，模型确认整批没有问题时会删除对应原始上下文。",
+        "type": "bool",
+        "default": true
+      }
+    }
+  },
+  "appearance": {
+    "description": "拓展页外观",
+    "type": "object",
+    "items": {
+      "theme": {
+        "description": "页面主题",
+        "type": "string",
+        "options": [
+          "system",
+          "light",
+          "dark"
+        ],
+        "default": "system"
+      }
+    }
+  }
+}
