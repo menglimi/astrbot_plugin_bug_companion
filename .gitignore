@@ -5,3 +5,10 @@ __pycache__/
 *.sqlite3-shm
 *.sqlite3-wal
 data/
+.env
+.env.*
+*.log
+.coverage
+node_modules/
+playwright-report/
+test-results/

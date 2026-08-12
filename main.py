@@ -15,7 +15,7 @@ from .service import BugCompanionService
 
 
 PLUGIN_NAME = "astrbot_plugin_bug_companion"
-PLUGIN_VERSION = "0.3.4"
+PLUGIN_VERSION = "0.3.5"
 
 
 @register(
