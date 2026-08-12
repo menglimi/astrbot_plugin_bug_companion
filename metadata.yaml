@@ -1,0 +1,21 @@
+name: astrbot_plugin_bug_companion
+display_name: 我会陪你修 Bug
+author: menglimi
+author_url: https://github.com/menglimi
+version: 0.3.5
+description: 以生活模拟为基础的全方位 AI 能力强化陪伴插件。当前提供指定群聊问题收集、模型初审、人工批阅、仓库动态播报、待办追踪与已审批知识答疑。
+desc: 以生活模拟为基础，强化日常协作、问题跟踪、仓库播报和知识答疑能力的全方位 AI 陪伴插件。
+repo: https://github.com/menglimi/astrbot_plugin_bug_companion
+category: AI 增强
+tags:
+  - Bug 管理
+  - 开发者工具
+  - 群聊整理
+  - 知识库
+  - 可视化管理
+icon: logo.png
+support_platforms:
+  - aiocqhttp
+  - qq_official
+  - telegram
+astrbot_version: ">=4.22.0"
